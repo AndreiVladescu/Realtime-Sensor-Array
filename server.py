@@ -38,13 +38,13 @@ def main():
                 while vid.isOpened():
                     img, frame = vid.read()
                     frame = imutils.resize(frame, width=640)
-                    time_seconds = datetime.now().strftime('%S')
+                    time_seconds = datetime.now().strftime('%H:%M:%S')
 
                     mpu_packet = str(mpu.get_all_data())
                     # read NMEA string received
                     gps_packet = str(ser.readline())
 
-                    string_packet = mpu_packet + ' ' + gps_packet
+                    string_packet = mpu_packet + ' ' + gps_packet + ' ' + time_seconds
 
                     packet = Packet(frame, string_packet)
                     data = packet.serialize()
