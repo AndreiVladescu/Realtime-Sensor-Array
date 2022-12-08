@@ -5,8 +5,12 @@ from datetime import datetime
 from Packet import *
 from mpu6050 import mpu6050
 import time
+import serial
+from time import sleep
+import sys
 
 mpu = mpu6050(0x68)
+ser = serial.Serial ("/dev/ttyS0")
 
 def main():
     try:
@@ -14,7 +18,7 @@ def main():
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         host_name = socket.gethostname()
 
-        host_ip = '192.168.100.200' # socket.gethostbyname(host_name)
+        host_ip = '192.168.0.52' # socket.gethostbyname(host_name)
 
         print('HOST IP:', host_ip)
         port = 9999
@@ -37,8 +41,12 @@ def main():
                     time_seconds = datetime.now().strftime('%S')
 
                     mpu_packet = str(mpu.get_all_data())
+                    # read NMEA string received
+                    gps_packet = str(ser.readline())
 
-                    packet = Packet(frame, mpu_packet)
+                    string_packet = mpu_packet + ' ' + gps_packet
+
+                    packet = Packet(frame, string_packet)
                     data = packet.serialize()
                     a = pickle.dumps(data)
                     message = struct.pack("Q", len(a)) + a
