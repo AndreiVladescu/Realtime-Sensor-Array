@@ -8,9 +8,13 @@ import time
 import serial
 from time import sleep
 import sys
+from pulsesensor import Pulsesensor
+import time
 
 mpu = mpu6050(0x68)
 ser = serial.Serial ("/dev/ttyS0")
+p = Pulsesensor()
+p.startAsyncBPM()
 
 def main():
     try:
@@ -43,8 +47,17 @@ def main():
                     mpu_packet = str(mpu.get_all_data())
                     # read NMEA string received
                     gps_packet = str(ser.readline())
+                    bpm_packet = ''
+                    try:
+                        bpm = p.BPM
+                        if bpm > 0:
+                            bpm_packet = str(bpm)
+                        else:
+                            bpm_packet = '0'
+                    except:
+                        p.stopAsyncBPM()
 
-                    string_packet = mpu_packet + ' ' + gps_packet + ' ' + time_seconds
+                    string_packet = mpu_packet + ' ' + gps_packet + ' ' + ' ' + bpm_packet + ' ' + time_seconds
 
                     packet = Packet(frame, string_packet)
                     data = packet.serialize()
