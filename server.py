@@ -12,9 +12,20 @@ from pulsesensor import Pulsesensor
 import time
 
 mpu = mpu6050(0x68)
-ser = serial.Serial ("/dev/ttyS0")
+ser = serial.Serial("/dev/ttyAMA0")
 p = Pulsesensor()
 p.startAsyncBPM()
+
+def gps_read():
+    count = 6
+    gps_packet = ''
+    while count > 0:
+        # read NMEA string received
+        temp_line = str(ser.readline())
+        #temp_line.decode('utf-8')
+        gps_packet += temp_line
+        count -= 1
+    return gps_packet
 
 def main():
     try:
@@ -22,7 +33,7 @@ def main():
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         host_name = socket.gethostname()
 
-        host_ip = '192.168.0.52' # socket.gethostbyname(host_name)
+        host_ip = '192.168.1.13' # socket.gethostbyname(host_name)
 
         print('HOST IP:', host_ip)
         port = 9999
@@ -45,8 +56,6 @@ def main():
                     time_seconds = datetime.now().strftime('%H:%M:%S')
 
                     mpu_packet = str(mpu.get_all_data())
-                    # read NMEA string received
-                    gps_packet = str(ser.readline())
                     bpm_packet = ''
                     try:
                         bpm = p.BPM
@@ -57,7 +66,7 @@ def main():
                     except:
                         p.stopAsyncBPM()
 
-                    string_packet = mpu_packet + ' ' + gps_packet + ' ' + ' ' + bpm_packet + ' ' + time_seconds
+                    string_packet = mpu_packet + ' ' + gps_read() + ' ' + ' ' + bpm_packet + ' ' + time_seconds
 
                     packet = Packet(frame, string_packet)
                     data = packet.serialize()
